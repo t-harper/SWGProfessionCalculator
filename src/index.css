@@ -8,8 +8,7 @@
 body {
     height: 100vh;
     width: 100%;
-    /* background-color: #0188a5; */
-    background-color: #00434c;
+    background: linear-gradient(180deg, #006FE8 0%, #015BA5 45%, #004EA4 100%);
 }
 
 /* 

@@ -1,5 +1,35 @@
 import styled from 'styled-components';
 
+const palette = {
+  bodyGradientStart: '#006FE8', // back1
+  bodyGradientMid: '#015BA5', // back2
+  bodyGradientEnd: '#004EA4', // back3
+  containerBackground: '#004EA4', // back3
+  containerBorder: '#80FF00', // line1
+  innerBackgroundStart: '#015BA5', // back2
+  innerBackgroundEnd: '#004EA4', // back3
+  scrollbarThumb: '#055CB4', // OverlayDark
+  scrollbarTrack: '#003B7A',
+  textPrimary: '#D5FBFF', // skillTextDefault
+  textAccent: '#80FF00', // header/line colors
+  textMuted: '#9BE3FF', // textdefault
+  linkHover: '#0E389A', // selectionBack
+  activePanelBackground: '#004EA4', // back3
+  warningText: '#FF6F0F', // contrast2
+  warningBackground: '#010E7E', // gamblingDefault
+  resetButton: '#F05A00', // contrast2 / gamblingLights
+  resetButtonHover: '#FF6F0F',
+  resetButtonText: '#090D33', // titleText
+  skillDefault: '#006FE8', // back1
+  skillHover: '#0E5CD3', // skillactivated
+  skillBorder: '#80FF00', // line1
+  skillActive: '#32BE03', // skillAcquiredSelected
+  skillActiveBorder: '#80FF00',
+  skillTextDefault: '#D5FBFF',
+  skillTextActive: '#001653', // textSelected
+  skillTextActiveHover: '#CAFD00', // skillAcquiredTextHover
+};
+
 export const MainContainer = styled.div`
   width: 100vw;
   height: 100vh;
@@ -38,20 +68,85 @@ export const SideContainer = styled.div`
 `;
 
 export const Container = styled.div`
-    border: 1px solid #36b2bc;
+    border: 2px solid ${palette.containerBorder};
     border-radius: 16px;
-    background-color: #00434c;
+    background-color: ${palette.containerBackground};
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 8px;
     flex: 1 1 33%;
     overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.45);
+
+    .profileManager {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 6px;
+
+        label {
+            font-size: 0.75rem;
+            color: ${palette.textAccent};
+            text-transform: uppercase;
+        }
+
+        .profileControls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+
+            select {
+                flex: 1;
+                min-width: 0;
+                background: ${palette.innerBackgroundStart};
+                border: 2px solid ${palette.containerBorder};
+                color: ${palette.textAccent};
+                padding: 4px;
+                border-radius: 8px;
+                font-weight: bold;
+                text-transform: capitalize;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+
+                option {
+                    background: ${palette.innerBackgroundStart};
+                    color: ${palette.textPrimary};
+                }
+            }
+
+            .iconButton {
+                border: 2px solid ${palette.containerBorder};
+                border-radius: 8px;
+                width: 34px;
+                height: 34px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.9rem;
+                cursor: pointer;
+                background: ${palette.skillDefault};
+                color: ${palette.textPrimary};
+                flex-shrink: 0;
+
+                &:hover {
+                    background: ${palette.linkHover};
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
 
     h2 {
         text-align: center;
         margin-bottom: 8px;
-        color: white;
+        color: ${palette.textAccent};
         font-size: 1.1rem;
         text-transform: uppercase;
     }
@@ -59,21 +154,25 @@ export const Container = styled.div`
     h4 {
         text-align: center;
         margin-bottom: 8px;
-        color: white;
+        color: ${palette.textAccent};
         font-size: 0.9rem;
 
         &.switch {
             cursor: pointer;
-            color: #e4f75d;
+            color: ${palette.textAccent};
         }
     }
     
     .innerContainer { 
         width: 100%;
         flex: 1;
-        border: 1px solid #36b2bc;
+        border: 1px solid ${palette.containerBorder};
         border-radius: 16px;
-        background-color: #008ca7;
+        background: linear-gradient(
+          180deg,
+          ${palette.innerBackgroundStart} 0%,
+          ${palette.innerBackgroundEnd} 100%
+        );
         flex-direction: column;
         padding: 8px 0;
         overflow: auto;
@@ -82,7 +181,7 @@ export const Container = styled.div`
             display: flex;
 
             p {
-                border: 1px solid #36b2bc;
+                border: 1px solid ${palette.containerBorder};
                 border-top: 0px;
                 
             }
@@ -100,17 +199,18 @@ export const Container = styled.div`
         &::-webkit-scrollbar {
             border-radius: 0 16px 16px 0;
             overflow: hidden;
+            background-color: ${palette.scrollbarTrack};
         }
 
         &::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 96, 115, 1);
+            background-color: ${palette.scrollbarThumb};
             border-radius: 0 16px 16px 0;
         }
     }
 
     button, p {
         display: block;
-        color: white;
+        color: ${palette.textPrimary};
         text-decoration: none;
         font-size: 0.8rem;
         padding: 2px 8px;
@@ -130,7 +230,7 @@ export const Container = styled.div`
         text-align: left;
 
         &:hover {
-            background-color: #00434c
+            background-color: ${palette.linkHover};
         }
     }
 
@@ -138,25 +238,30 @@ export const Container = styled.div`
         position: relative;
         min-width: 100%;
         height: 70%;
-        background-color: #0089a5;
+        background-color: ${palette.activePanelBackground};
         gap: 5px;
-        color: white;
+        color: ${palette.textPrimary};
         font-weight: bold;
 
         select { 
             position: absolute;
             left: 5px; 
-            background: #0089a5;
-            border: none;
-            color: #ffffff;
+            background: ${palette.activePanelBackground};
+            border: 1px solid ${palette.containerBorder};
+            color: ${palette.textAccent};
             font-weight: bold;
             text-transform: capitalize; 
+
+            option {
+                background: ${palette.innerBackgroundStart};
+                color: ${palette.textPrimary};
+            }
         }
 
         .skillPointWarning {
-            color: red;
+            color: ${palette.warningText};
             font-size: 1.2rem;
-            background-color: black;
+            background-color: ${palette.warningBackground};
             font-weight: bolder;
             padding: 8px;
             margin: 4px;
@@ -169,12 +274,17 @@ export const Container = styled.div`
             padding: 8px;
 
             button {
-                background-color: rgb(230,0,0);
+                background-color: ${palette.resetButton};
                 padding: 4px;
                 font-weight: bolder;
                 outline: none;
                 border: none;
                 border-radius: 0 4px 0 4px;
+                color: ${palette.resetButtonText};
+
+                &:hover {
+                    filter: brightness(1.1);
+                }
             }
 
             
@@ -183,6 +293,7 @@ export const Container = styled.div`
         span {
             font-size: 1rem;
             margin: 0 8px;
+            color: ${palette.textAccent};
         }
     }
 
@@ -199,9 +310,10 @@ export const Container = styled.div`
         p {
             cursor: pointer;
             white-space: nowrap;
+            color: ${palette.textMuted};
             
             &:hover {
-                background-color: #00434c;
+                background-color: ${palette.linkHover};
             }
         }
     }
@@ -219,7 +331,7 @@ export const Container = styled.div`
         align-items: flex-end;
         margin: 0 2px;
 
-        .linkContainer { 0
+        .linkContainer {
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -303,18 +415,18 @@ export const SkillBoxContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: ${(props) => (props.active ? '#00a92e' : '#005f73')};
-  border-color: ${(props) => (props.active ? '#00434c' : '#00434c')};
+  background-color: ${(props) => (props.active ? palette.skillActive : palette.skillDefault)};
+  border-color: ${(props) => (props.active ? palette.skillActiveBorder : palette.skillBorder)};
   cursor: pointer;
   overflow: hidden;
 
   &:hover {
-    background-color: ${(props) => (props.active ? '#256729' : '#0089a5')};
-    border-color: ${(props) => (props.active ? '#65d775' : '#00434c')};
-    border: 4px 2px;
+    background-color: ${(props) => (props.active ? palette.skillActiveBorder : palette.skillHover)};
+    border-color: ${(props) => (props.active ? palette.skillActiveBorder : palette.skillBorder)};
 
     p {
-      color: ${(props) => (props.active ? '#e4f75d' : 'white')};
+      color: ${(props) =>
+        props.active ? palette.skillTextActiveHover : palette.textAccent};
     }
   }
 
@@ -325,11 +437,91 @@ export const SkillBoxContainer = styled.div`
     white-space: normal;
     font-weight: bold;
     line-height: 1rem;
-    color: ${(props) => (props.active ? 'black' : 'white')};
+    color: ${(props) =>
+      props.active ? palette.skillTextActive : palette.skillTextDefault};
   }
 
   @media only screen and (max-width: 968px) {
     width: 100%;
     padding: 1px;
+  }
+`;
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background: ${palette.containerBackground};
+  border: 2px solid ${palette.containerBorder};
+  border-radius: 12px;
+  padding: 20px;
+  width: min(90vw, 360px);
+  color: ${palette.textPrimary};
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+
+  h3 {
+    margin-bottom: 12px;
+    text-align: center;
+    color: ${palette.textAccent};
+    text-transform: uppercase;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    label {
+      font-size: 0.8rem;
+      color: ${palette.textAccent};
+    }
+
+    input {
+      padding: 6px;
+      border-radius: 8px;
+      border: 2px solid ${palette.containerBorder};
+      background: ${palette.innerBackgroundStart};
+      color: ${palette.textPrimary};
+      font-size: 1rem;
+    }
+
+    .modalActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+
+      button {
+        border: 2px solid ${palette.containerBorder};
+        border-radius: 8px;
+        padding: 4px 10px;
+        cursor: pointer;
+        color: ${palette.resetButtonText};
+        background: ${palette.resetButton};
+        font-weight: bold;
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        &:hover:not(:disabled) {
+          background: ${palette.resetButtonHover};
+        }
+
+        &:first-child {
+          background: ${palette.innerBackgroundStart};
+          color: ${palette.textPrimary};
+        }
+      }
+    }
   }
 `;

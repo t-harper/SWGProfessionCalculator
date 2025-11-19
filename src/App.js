@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { MainContainer, SkillContainer, SideContainer } from './styled-components';
 import Professions from './components/Professions'
@@ -10,19 +10,78 @@ import Titles from './components/Titles';
 import SkillTree from './components/SkillTree'
 import ActiveSkillModifiers from './components/ActiveSkillModifiers'
 import ActiveCommandsAndCertifications from './components/ActiveCommandsAndCertifications'
+import SaveProfileModal from './components/SaveProfileModal';
 import { SKILLS, ALL_SPECIES } from './CONSTANTS'
+
+const DEFAULT_PROFILE_NAME = 'Default Profile';
+const STORAGE_KEY = 'swgProfiles';
+
+const ensureDefaultProfile = (profileMap = {}) => {
+  if (Object.prototype.hasOwnProperty.call(profileMap, DEFAULT_PROFILE_NAME)) {
+    return { ...profileMap };
+  }
+  return {
+    [DEFAULT_PROFILE_NAME]: [],
+    ...profileMap,
+  };
+};
+
+const areSkillListsEqual = (listA = [], listB = []) => {
+  if (listA.length !== listB.length) return false;
+  for (let i = 0; i < listA.length; i++) {
+    if (listA[i] !== listB[i]) return false;
+  }
+  return true;
+};
+
+const getInitialProfiles = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (stored && stored.profiles && Object.keys(stored.profiles).length > 0) {
+      const sanitizedProfiles = ensureDefaultProfile(stored.profiles);
+      const validActive =
+        stored.activeProfile && sanitizedProfiles[stored.activeProfile]
+          ? stored.activeProfile
+          : DEFAULT_PROFILE_NAME;
+      return {
+        profiles: sanitizedProfiles,
+        activeProfile: validActive,
+      };
+    }
+  } catch (error) {
+    console.error('Failed to parse stored profiles', error);
+  }
+
+  let legacySkills = [];
+  try {
+    const legacy = JSON.parse(localStorage.getItem('playerSkills'));
+    if (Array.isArray(legacy)) {
+      legacySkills = legacy;
+    }
+  } catch (error) {
+    console.error('Failed to parse legacy skills', error);
+  }
+
+  return {
+    profiles: ensureDefaultProfile({
+      [DEFAULT_PROFILE_NAME]: legacySkills,
+    }),
+    activeProfile: DEFAULT_PROFILE_NAME,
+  };
+};
 
 function App() {
 
-  const [playerSkills, setPlayerSkills] = useState(() => {
-    const savedPlayerSkills = localStorage.getItem("playerSkills");
-    const initialValue = JSON.parse(savedPlayerSkills);
-    
-    return initialValue || [];
-  });
+  const initialProfileState = useMemo(() => getInitialProfiles(), []);
+  const [profiles, setProfiles] = useState(initialProfileState.profiles);
+  const [activeProfile, setActiveProfile] = useState(initialProfileState.activeProfile);
+  const [playerSkills, setPlayerSkills] = useState(
+    initialProfileState.profiles[initialProfileState.activeProfile] || []
+  );
   const [skillPointWarning, setSkillPointWarning] = useState(false)
   const [activeSkill, setActiveSkill] = useState('combat_brawler_novice');
   const [activeProfession, setActiveProfession] = useState('combat_brawler')
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -31,8 +90,26 @@ function App() {
   }, [skillPointWarning])
 
   useEffect(() => {
-    localStorage.setItem("playerSkills", JSON.stringify(playerSkills));
-  }, [playerSkills])
+    if (!activeProfile || activeProfile === DEFAULT_PROFILE_NAME) return;
+    setProfiles((prev) => {
+      const currentSkills = prev[activeProfile] || [];
+      if (areSkillListsEqual(currentSkills, playerSkills)) return prev;
+      return {
+        ...prev,
+        [activeProfile]: [...playerSkills],
+      };
+    });
+  }, [playerSkills, activeProfile]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        profiles,
+        activeProfile,
+      })
+    );
+  }, [profiles, activeProfile]);
 
   const handleProfessionChange = (newProf) => {
     setActiveProfession(() => newProf)
@@ -60,7 +137,8 @@ function App() {
     if (action === 'add') {
       addSkillsToPlayer(data)
     } else if (action === 'reset') {
-      setPlayerSkills(() => [])
+      setActiveProfile(DEFAULT_PROFILE_NAME);
+      setPlayerSkills(() => [...(profiles[DEFAULT_PROFILE_NAME] || [])])
     } else {
       removeSkillsFromPlayer(data)
     }
@@ -123,40 +201,119 @@ function App() {
     setPlayerSkills(() => newSkills);
   }
 
+  const handleProfileSelection = (profileName) => {
+    const fallback = profiles[profileName]
+      ? profileName
+      : DEFAULT_PROFILE_NAME;
+    setActiveProfile(fallback);
+    setPlayerSkills(() => [...(profiles[fallback] || [])]);
+  };
+
+  const handleProfileDelete = () => {
+    if (activeProfile === DEFAULT_PROFILE_NAME) {
+      window.alert('The default profile cannot be deleted.');
+      return;
+    }
+    const profileNames = Object.keys(profiles);
+    if (profileNames.length === 1) {
+      window.alert('You must keep at least one profile.');
+      return;
+    }
+    const confirmed = window.confirm(`Delete profile "${activeProfile}"?`);
+    if (!confirmed) return;
+    const updatedProfiles = { ...profiles };
+    delete updatedProfiles[activeProfile];
+    const remainingNames = Object.keys(updatedProfiles);
+    const nextProfile = remainingNames[0] || DEFAULT_PROFILE_NAME;
+    setProfiles(updatedProfiles);
+    setActiveProfile(nextProfile);
+    setPlayerSkills(() => [...(updatedProfiles[nextProfile] || [])]);
+  };
+
+  const handleProfileSave = () => {
+    if (activeProfile === DEFAULT_PROFILE_NAME) {
+      setIsSaveModalOpen(true);
+      return;
+    }
+    setProfiles((prev) => ({
+      ...prev,
+      [activeProfile]: [...playerSkills],
+    }));
+  };
+
+  const handleCloseSaveModal = () => {
+    setIsSaveModalOpen(false);
+  };
+
+  const handleSaveProfile = (profileName) => {
+    const trimmed = profileName.trim();
+    if (!trimmed) return;
+    if (trimmed === DEFAULT_PROFILE_NAME) {
+      window.alert('Please choose a different name. The default profile cannot be overwritten.');
+      return;
+    }
+    const exists = profiles[trimmed];
+    if (exists && trimmed !== activeProfile) {
+      const overwrite = window.confirm(
+        `Profile "${trimmed}" already exists. Overwrite it?`
+      );
+      if (!overwrite) return;
+    }
+    setProfiles((prev) => ({
+      ...prev,
+      [trimmed]: [...playerSkills],
+    }));
+    setActiveProfile(trimmed);
+    setIsSaveModalOpen(false);
+  };
 
   return (
-    <MainContainer>
-      <SideContainer>
-        <Professions 
-          playerSkills={playerSkills}
-          handleProfessionChange={handleProfessionChange}/>
-        <Experience 
-          playerSkills={playerSkills}/>
-        <SkillModifiers 
-          playerSkills={playerSkills}/>
-      </SideContainer>
-      <SkillContainer>
-        <SkillTree 
-          handleSpeciesChange={handleSpeciesChange}
-          skillPointWarning={skillPointWarning}
-          playerSkills={playerSkills}
-          activeProfession={activeProfession}
-          handleProfessionChange={handleProfessionChange}
-          handleActiveSkillChange={handleActiveSkillChange}
-          handleSkillChange={handleSkillChange}
-        />
-        <ActiveSkillModifiers activeSkill={activeSkill}/>
-        <ActiveCommandsAndCertifications activeSkill={activeSkill}/> 
-      </SkillContainer>
-      <SideContainer>
-        <Commands 
-          playerSkills={playerSkills}/>
-        <Certifications 
-          playerSkills={playerSkills} />
-        <Titles
-          playerSkills={playerSkills} />
-      </SideContainer>
-    </MainContainer>
+    <>
+      <MainContainer>
+        <SideContainer>
+          <Professions 
+            playerSkills={playerSkills}
+            handleProfessionChange={handleProfessionChange}
+            profiles={profiles}
+            activeProfile={activeProfile}
+            defaultProfileName={DEFAULT_PROFILE_NAME}
+            handleProfileSelection={handleProfileSelection}
+            handleSaveProfile={handleProfileSave}
+            handleDeleteProfile={handleProfileDelete}
+          />
+          <Experience 
+            playerSkills={playerSkills}/>
+          <SkillModifiers 
+            playerSkills={playerSkills}/>
+        </SideContainer>
+        <SkillContainer>
+          <SkillTree 
+            handleSpeciesChange={handleSpeciesChange}
+            skillPointWarning={skillPointWarning}
+            playerSkills={playerSkills}
+            activeProfession={activeProfession}
+            handleProfessionChange={handleProfessionChange}
+            handleActiveSkillChange={handleActiveSkillChange}
+            handleSkillChange={handleSkillChange}
+          />
+          <ActiveSkillModifiers activeSkill={activeSkill}/>
+          <ActiveCommandsAndCertifications activeSkill={activeSkill}/> 
+        </SkillContainer>
+        <SideContainer>
+          <Commands 
+            playerSkills={playerSkills}/>
+          <Certifications 
+            playerSkills={playerSkills} />
+          <Titles
+            playerSkills={playerSkills} />
+        </SideContainer>
+      </MainContainer>
+      <SaveProfileModal 
+        isOpen={isSaveModalOpen}
+        onClose={handleCloseSaveModal}
+        onSave={handleSaveProfile}
+      />
+    </>
   );
 }
 

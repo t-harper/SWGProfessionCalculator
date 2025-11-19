@@ -1,10 +1,21 @@
 import React, { useState } from 'react'
 import { ALL_SKILLS_WHICH_PROFESSION, NOVICE_SKILL, PROFESSIONS, ALL_SPECIES } from '../CONSTANTS'
 import { Container } from '../styled-components'
+import ProfileManager from './ProfileManager'
 
-function Professions({playerSkills, handleProfessionChange}) {
+function Professions({
+  playerSkills,
+  handleProfessionChange,
+  profiles,
+  activeProfile,
+  defaultProfileName,
+  handleProfileSelection,
+  handleSaveProfile,
+  handleDeleteProfile
+}) {
 
   const [myProfessions, setMyProfessions] = useState(false);
+  const isDefaultProfile = activeProfile === defaultProfileName;
 
   const playerProfessions = [...new Set(playerSkills.filter(item => !ALL_SPECIES.includes(item)).map(item => {
     return ALL_SKILLS_WHICH_PROFESSION[item]
@@ -16,6 +27,14 @@ function Professions({playerSkills, handleProfessionChange}) {
 
   return (
     <Container>
+      <ProfileManager 
+        profiles={profiles}
+        activeProfile={activeProfile}
+        isDefaultProfile={isDefaultProfile}
+        handleProfileSelection={handleProfileSelection}
+        handleSaveProfile={handleSaveProfile}
+        handleDeleteProfile={handleDeleteProfile}
+      />
       <h4 className="switch" onClick={() => setMyProfessions(() => !myProfessions)}>
         {myProfessions ? "My Professions" : "All Professions"}
       </h4>
